@@ -259,4 +259,11 @@ impl RemittanceSplit {
 
         quotient * percent + (remainder * percent) / 100
     }
+
+    /// Extend the TTL of instance storage
+    fn extend_instance_ttl(env: &Env) {
+        env.storage()
+            .instance()
+            .extend_ttl(INSTANCE_LIFETIME_THRESHOLD, INSTANCE_BUMP_AMOUNT);
+    }
 }

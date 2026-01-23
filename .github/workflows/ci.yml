@@ -67,7 +67,6 @@ jobs:
           rustc --version
           cargo --version
           rustup target list --installed | grep wasm32-unknown-unknown || rustup target add wasm32-unknown-unknown
-          rustup target list --installed | grep wasm32v1-none || rustup target add wasm32v1-none || echo "Warning: wasm32v1-none target not available, will use wasm32-unknown-unknown fallback"
 
       - name: Build workspace (WASM)
         run: |
