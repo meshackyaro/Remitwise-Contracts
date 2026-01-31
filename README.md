@@ -10,8 +10,6 @@ This workspace contains the core smart contracts that power RemitWise's post-rem
 - **savings_goals**: Goal-based savings with target dates and locked funds
 - **bill_payments**: Automated bill payment tracking and scheduling
 - **insurance**: Micro-insurance policy management and premium payments
-- **family_wallet**: Family member management with spending limits and permissions
-- **reporting**: Cross-contract aggregation and comprehensive financial reporting
 
 ## Prerequisites
 
@@ -41,6 +39,12 @@ Handles automatic allocation of remittance funds into different categories.
 - `get_split`: Get current split configuration
 - `calculate_split`: Calculate actual amounts from total remittance
 
+**Events:**
+- `SplitInitializedEvent`: Emitted when split configuration is initialized
+  - `spending_percent`, `savings_percent`, `bills_percent`, `insurance_percent`, `timestamp`
+- `SplitCalculatedEvent`: Emitted when split amounts are calculated
+  - `total_amount`, `spending_amount`, `savings_amount`, `bills_amount`, `insurance_amount`, `timestamp`
+
 ### Savings Goals
 
 Manages goal-based savings with target dates.
@@ -56,6 +60,14 @@ Manages goal-based savings with target dates.
 - `restore_goal`: Restore archived goal to active storage
 - `cleanup_old_archives`: Permanently delete old archives
 - `get_storage_stats`: Get storage usage statistics
+
+**Events:**
+- `GoalCreatedEvent`: Emitted when a new savings goal is created
+  - `goal_id`, `name`, `target_amount`, `target_date`, `timestamp`
+- `FundsAddedEvent`: Emitted when funds are added to a goal
+  - `goal_id`, `amount`, `new_total`, `timestamp`
+- `GoalCompletedEvent`: Emitted when a goal reaches its target amount
+  - `goal_id`, `name`, `final_amount`, `timestamp`
 
 ### Bill Payments
 
@@ -73,6 +85,14 @@ Tracks and manages bill payments with recurring support.
 - `bulk_cleanup_bills`: Permanently delete old archives
 - `get_storage_stats`: Get storage usage statistics
 
+**Events:**
+- `BillCreatedEvent`: Emitted when a new bill is created
+  - `bill_id`, `name`, `amount`, `due_date`, `recurring`, `timestamp`
+- `BillPaidEvent`: Emitted when a bill is marked as paid
+  - `bill_id`, `name`, `amount`, `timestamp`
+- `RecurringBillCreatedEvent`: Emitted when a recurring bill generates the next bill
+  - `bill_id`, `parent_bill_id`, `name`, `amount`, `due_date`, `timestamp`
+
 ### Insurance
 
 Manages micro-insurance policies and premium payments.
@@ -83,46 +103,36 @@ Manages micro-insurance policies and premium payments.
 - `pay_premium`: Pay monthly premium
 - `get_active_policies`: Get all active policies
 - `get_total_monthly_premium`: Calculate total monthly premium cost
-- `archive_inactive_policies`: Archive deactivated policies to reduce storage
-- `get_archived_policies`: Query archived policies
-- `restore_policy`: Restore archived policy to active storage
-- `bulk_cleanup_policies`: Permanently delete old archives
-- `get_storage_stats`: Get storage usage statistics
+- `deactivate_policy`: Deactivate an insurance policy
 
-### Family Wallet
+**Events:**
+- `PolicyCreatedEvent`: Emitted when a new insurance policy is created
+  - `policy_id`, `name`, `coverage_type`, `monthly_premium`, `coverage_amount`, `timestamp`
+- `PremiumPaidEvent`: Emitted when a premium is paid
+  - `policy_id`, `name`, `amount`, `next_payment_date`, `timestamp`
+- `PolicyDeactivatedEvent`: Emitted when a policy is deactivated
+  - `policy_id`, `name`, `timestamp`
 
-Manages family members, roles, and spending limits.
+## Events
 
-**Key Functions:**
+All contracts emit events for important state changes, enabling real-time tracking and frontend integration. Events follow Soroban best practices and include:
 
-- `add_member`: Add a family member with role and spending limit
-- `get_member`: Get member details
-- `update_spending_limit`: Update spending limit for a member
-- `check_spending_limit`: Verify if spending is within limit
-- `archive_old_transactions`: Archive executed transactions to reduce storage
-- `get_archived_transactions`: Query archived transactions
-- `cleanup_expired_pending`: Remove expired pending transactions
-- `get_storage_stats`: Get storage usage statistics
+- **Relevant IDs**: All events include the ID of the entity being acted upon
+- **Amounts**: Financial events include transaction amounts
+- **Timestamps**: All events include the ledger timestamp for accurate tracking
+- **Context Data**: Additional contextual information (names, dates, etc.)
 
-### Reporting
+### Event Topics
 
-Aggregates data from all contracts to generate comprehensive financial reports.
+Each contract uses short symbol topics for efficient event identification:
+- **Remittance Split**: `init`, `calc`
+- **Savings Goals**: `created`, `added`, `completed`
+- **Bill Payments**: `created`, `paid`, `recurring`
+- **Insurance**: `created`, `paid`, `deactive`
 
-**Key Functions:**
+### Querying Events
 
-- `get_financial_health_report`: Generate comprehensive financial health report
-- `get_remittance_summary`: Get remittance allocation breakdown
-- `get_savings_report`: Get savings progress report
-- `get_bill_compliance_report`: Get bill payment compliance report
-- `get_insurance_report`: Get insurance coverage report
-- `calculate_health_score`: Calculate financial health score (0-100)
-- `get_trend_analysis`: Compare period-over-period trends
-- `store_report`: Store report for future reference
-- `get_stored_report`: Retrieve previously stored report
-- `archive_old_reports`: Archive old reports to reduce storage
-- `get_archived_reports`: Query archived reports
-- `cleanup_old_reports`: Permanently delete old archives
-- `get_storage_stats`: Get storage usage statistics
+Events can be queried from the Stellar network using the Soroban SDK or via the Horizon API for frontend integration. Each event structure is exported and can be decoded using the contract's schema.
 
 ## Testing
 
@@ -178,7 +188,6 @@ This is a basic MVP implementation. Future enhancements:
 
 - Integration with Stellar Asset Contract (USDC)
 - Cross-contract calls for automated allocation
-- Event emissions for transaction tracking
 - Multi-signature support for family wallets
 - Emergency mode with priority processing
 
