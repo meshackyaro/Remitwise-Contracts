@@ -83,7 +83,7 @@ let mut cursor = None;
 loop {
     let page = contract.get_goals_paginated(user_address, cursor, Some(50));
     all_goals.extend_from_slice(&page.goals);
-    
+
     if !page.has_more {
         break;
     }
@@ -904,7 +904,7 @@ impl SavingsGoalContract {
     ///
     /// # Returns
     /// Vec of all SavingsGoal structs belonging to the owner
-    /// 
+    ///
     /// # Note
     /// This function can be expensive with large datasets. Consider using get_goals_paginated
     /// for better performance when dealing with many goals.
@@ -933,15 +933,15 @@ impl SavingsGoalContract {
     ///
     /// # Returns
     /// PaginatedGoalsResponse containing the goals, pagination info, and next cursor
-    /// 
+    ///
     /// # Performance
     /// This function is optimized for large datasets by using indexed iteration
     /// and early termination when the limit is reached.
     pub fn get_goals_paginated(
-        env: Env, 
-        owner: Address, 
-        cursor: Option<u32>, 
-        limit: Option<u32>
+        env: Env,
+        owner: Address,
+        cursor: Option<u32>,
+        limit: Option<u32>,
     ) -> PaginatedGoalsResponse {
         let effective_limit = limit
             .unwrap_or(DEFAULT_PAGE_LIMIT)

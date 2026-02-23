@@ -920,28 +920,28 @@ fn test_get_goals_paginated_multiple_pages() {
 
     // Verify all goals are returned across pages
     let mut all_goals = Vec::new(&env);
-    
+
     // Add goals from page1
     for i in 0..page1.goals.len() {
         if let Some(goal) = page1.goals.get(i) {
             all_goals.push_back(goal.id);
         }
     }
-    
+
     // Add goals from page2
     for i in 0..page2.goals.len() {
         if let Some(goal) = page2.goals.get(i) {
             all_goals.push_back(goal.id);
         }
     }
-    
+
     // Add goals from page3
     for i in 0..page3.goals.len() {
         if let Some(goal) = page3.goals.get(i) {
             all_goals.push_back(goal.id);
         }
     }
-    
+
     assert_eq!(all_goals.len(), 5);
     assert!(all_goals.contains(&goal1));
     assert!(all_goals.contains(&goal2));
@@ -962,19 +962,17 @@ fn test_get_goals_paginated_default_limit() {
 
     // Create 25 goals (more than default limit of 20)
     let goal_names = [
-        "Goal 0", "Goal 1", "Goal 2", "Goal 3", "Goal 4",
-        "Goal 5", "Goal 6", "Goal 7", "Goal 8", "Goal 9",
-        "Goal 10", "Goal 11", "Goal 12", "Goal 13", "Goal 14",
-        "Goal 15", "Goal 16", "Goal 17", "Goal 18", "Goal 19",
-        "Goal 20", "Goal 21", "Goal 22", "Goal 23", "Goal 24"
+        "Goal 0", "Goal 1", "Goal 2", "Goal 3", "Goal 4", "Goal 5", "Goal 6", "Goal 7", "Goal 8",
+        "Goal 9", "Goal 10", "Goal 11", "Goal 12", "Goal 13", "Goal 14", "Goal 15", "Goal 16",
+        "Goal 17", "Goal 18", "Goal 19", "Goal 20", "Goal 21", "Goal 22", "Goal 23", "Goal 24",
     ];
-    
+
     for i in 0..25 {
         client.create_goal(
-            &user, 
-            &String::from_str(&env, goal_names[i]), 
-            &(1000 + i as i128), 
-            &1735689600
+            &user,
+            &String::from_str(&env, goal_names[i]),
+            &(1000 + i as i128),
+            &1735689600,
         );
     }
 
@@ -997,19 +995,17 @@ fn test_get_goals_paginated_max_limit_enforcement() {
 
     // Create 25 goals (more than max limit of 100 for testing)
     let goal_names = [
-        "Goal 0", "Goal 1", "Goal 2", "Goal 3", "Goal 4",
-        "Goal 5", "Goal 6", "Goal 7", "Goal 8", "Goal 9",
-        "Goal 10", "Goal 11", "Goal 12", "Goal 13", "Goal 14",
-        "Goal 15", "Goal 16", "Goal 17", "Goal 18", "Goal 19",
-        "Goal 20", "Goal 21", "Goal 22", "Goal 23", "Goal 24"
+        "Goal 0", "Goal 1", "Goal 2", "Goal 3", "Goal 4", "Goal 5", "Goal 6", "Goal 7", "Goal 8",
+        "Goal 9", "Goal 10", "Goal 11", "Goal 12", "Goal 13", "Goal 14", "Goal 15", "Goal 16",
+        "Goal 17", "Goal 18", "Goal 19", "Goal 20", "Goal 21", "Goal 22", "Goal 23", "Goal 24",
     ];
-    
+
     for i in 0..25 {
         client.create_goal(
-            &user, 
-            &String::from_str(&env, goal_names[i]), 
-            &(1000 + i as i128), 
-            &1735689600
+            &user,
+            &String::from_str(&env, goal_names[i]),
+            &(1000 + i as i128),
+            &1735689600,
         );
     }
 
@@ -1032,13 +1028,13 @@ fn test_get_goals_paginated_minimum_limit() {
 
     // Create 5 goals
     let goal_names = ["Goal 0", "Goal 1", "Goal 2", "Goal 3", "Goal 4"];
-    
+
     for i in 0..5 {
         client.create_goal(
-            &user, 
-            &String::from_str(&env, goal_names[i]), 
-            &(1000 + i as i128), 
-            &1735689600
+            &user,
+            &String::from_str(&env, goal_names[i]),
+            &(1000 + i as i128),
+            &1735689600,
         );
     }
 
@@ -1069,7 +1065,7 @@ fn test_get_goals_paginated_cursor_behavior() {
     assert_eq!(page1.goals.len(), 1);
     assert!(page1.has_more);
     assert!(page1.next_cursor.is_some());
-    
+
     // Check which goal is on first page
     let first_goal_id = page1.goals.get(0).unwrap().id;
     assert_eq!(first_goal_id, goal1);
@@ -1080,7 +1076,7 @@ fn test_get_goals_paginated_cursor_behavior() {
     assert_eq!(page2.goals.len(), 1);
     assert!(page2.has_more);
     assert!(page2.next_cursor.is_some());
-    
+
     // Check which goal is on second page
     let second_goal_id = page2.goals.get(0).unwrap().id;
     assert_eq!(second_goal_id, goal2);
@@ -1091,7 +1087,7 @@ fn test_get_goals_paginated_cursor_behavior() {
     assert_eq!(page3.goals.len(), 1);
     assert!(!page3.has_more);
     assert_eq!(page3.next_cursor, None);
-    
+
     // Check which goal is on third page
     let third_goal_id = page3.goals.get(0).unwrap().id;
     assert_eq!(third_goal_id, goal3);
