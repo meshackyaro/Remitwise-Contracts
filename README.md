@@ -40,6 +40,7 @@ Handles automatic allocation of remittance funds into different categories.
 - `calculate_split`: Calculate actual amounts from total remittance
 
 **Events:**
+
 - `SplitInitializedEvent`: Emitted when split configuration is initialized
   - `spending_percent`, `savings_percent`, `bills_percent`, `insurance_percent`, `timestamp`
 - `SplitCalculatedEvent`: Emitted when split amounts are calculated
@@ -62,6 +63,7 @@ Manages goal-based savings with target dates.
 - `get_storage_stats`: Get storage usage statistics
 
 **Events:**
+
 - `GoalCreatedEvent`: Emitted when a new savings goal is created
   - `goal_id`, `name`, `target_amount`, `target_date`, `timestamp`
 - `FundsAddedEvent`: Emitted when funds are added to a goal
@@ -86,6 +88,7 @@ Tracks and manages bill payments with recurring support.
 - `get_storage_stats`: Get storage usage statistics
 
 **Events:**
+
 - `BillCreatedEvent`: Emitted when a new bill is created
   - `bill_id`, `name`, `amount`, `due_date`, `recurring`, `timestamp`
 - `BillPaidEvent`: Emitted when a bill is marked as paid
@@ -106,6 +109,7 @@ Manages micro-insurance policies and premium payments.
 - `deactivate_policy`: Deactivate an insurance policy
 
 **Events:**
+
 - `PolicyCreatedEvent`: Emitted when a new insurance policy is created
   - `policy_id`, `name`, `coverage_type`, `monthly_premium`, `coverage_amount`, `timestamp`
 - `PremiumPaidEvent`: Emitted when a premium is paid
@@ -125,6 +129,7 @@ All contracts emit events for important state changes, enabling real-time tracki
 ### Event Topics
 
 Each contract uses short symbol topics for efficient event identification:
+
 - **Remittance Split**: `init`, `calc`
 - **Savings Goals**: `created`, `added`, `completed`
 - **Bill Payments**: `created`, `paid`, `recurring`
@@ -148,6 +153,27 @@ Run tests for a specific contract:
 cd remittance_split
 cargo test
 ```
+
+### Integration Tests
+
+Multi-contract integration tests verify that all contracts work together correctly:
+
+```bash
+# Run all integration tests
+cargo test -p integration_tests
+
+# Run with output
+cargo test -p integration_tests -- --nocapture
+```
+
+The integration tests simulate real user flows:
+
+- Deploy all contracts (remittance_split, savings_goals, bill_payments, insurance)
+- Initialize split configuration
+- Create goals, bills, and policies
+- Calculate split and verify amounts align with expectations
+
+See [integration_tests/README.md](integration_tests/README.md) for detailed documentation.
 
 ### USDC remittance split checks (local & CI)
 

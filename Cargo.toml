@@ -13,6 +13,7 @@ members = [
     "family_wallet",
     "data_migration",
     "reporting",
+    "integration_tests",
 ]
 resolver = "2"
 
