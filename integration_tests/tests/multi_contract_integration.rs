@@ -4,7 +4,7 @@ use soroban_sdk::{testutils::Address as _, Address, Env, String as SorobanString
 
 // Import all contract types and clients
 use remittance_split::{RemittanceSplit, RemittanceSplitClient};
-use savings_goals::{SavingsGoals, SavingsGoalsClient};
+use savings_goals::{SavingsGoalContract, SavingsGoalContractClient};
 use bill_payments::{BillPayments, BillPaymentsClient};
 use insurance::{Insurance, InsuranceClient};
 
@@ -26,8 +26,8 @@ fn test_multi_contract_user_flow() {
     let remittance_contract_id = env.register_contract(None, RemittanceSplit);
     let remittance_client = RemittanceSplitClient::new(&env, &remittance_contract_id);
 
-    let savings_contract_id = env.register_contract(None, SavingsGoals);
-    let savings_client = SavingsGoalsClient::new(&env, &savings_contract_id);
+    let savings_contract_id = env.register_contract(None, SavingsGoalContract);
+    let savings_client = SavingsGoalContractClient::new(&env, &savings_contract_id);
 
     let bills_contract_id = env.register_contract(None, BillPayments);
     let bills_client = BillPaymentsClient::new(&env, &bills_contract_id);
@@ -38,7 +38,7 @@ fn test_multi_contract_user_flow() {
     // Step 1: Initialize remittance split with percentages
     // Spending: 40%, Savings: 30%, Bills: 20%, Insurance: 10%
     let nonce = 0u64;
-    let result = remittance_client.initialize_split(
+    remittance_client.initialize_split(
         &user,
         &nonce,
         &40u32, // spending
@@ -46,7 +46,6 @@ fn test_multi_contract_user_flow() {
         &20u32, // bills
         &10u32, // insurance
     );
-    assert!(result.is_ok(), "Failed to initialize split");
 
     // Step 2: Create a savings goal
     let goal_name = SorobanString::from_str(&env, "Education Fund");
@@ -59,8 +58,6 @@ fn test_multi_contract_user_flow() {
         &target_amount,
         &target_date,
     );
-    assert!(goal_id.is_ok(), "Failed to create savings goal");
-    let goal_id = goal_id.unwrap();
     assert_eq!(goal_id, 1u32, "Goal ID should be 1");
 
     // Step 3: Create a bill
@@ -78,8 +75,6 @@ fn test_multi_contract_user_flow() {
         &recurring,
         &frequency_days,
     );
-    assert!(bill_id.is_ok(), "Failed to create bill");
-    let bill_id = bill_id.unwrap();
     assert_eq!(bill_id, 1u32, "Bill ID should be 1");
 
     // Step 4: Create an insurance policy
@@ -95,16 +90,11 @@ fn test_multi_contract_user_flow() {
         &monthly_premium,
         &coverage_amount,
     );
-    assert!(policy_id.is_ok(), "Failed to create insurance policy");
-    let policy_id = policy_id.unwrap();
     assert_eq!(policy_id, 1u32, "Policy ID should be 1");
 
     // Step 5: Calculate split for a remittance amount
     let total_remittance = 10_000i128;
-    let split_result = remittance_client.calculate_split(&total_remittance);
-    assert!(split_result.is_ok(), "Failed to calculate split");
-
-    let amounts = split_result.unwrap();
+    let amounts = remittance_client.calculate_split(&total_remittance);
     assert_eq!(amounts.len(), 4, "Should have 4 allocation amounts");
 
     // Extract amounts
@@ -155,7 +145,7 @@ fn test_split_with_rounding() {
 
     // Initialize with percentages that might cause rounding issues
     // Spending: 33%, Savings: 33%, Bills: 17%, Insurance: 17%
-    let result = remittance_client.initialize_split(
+    remittance_client.initialize_split(
         &user,
         &0u64,
         &33u32,
@@ -163,14 +153,11 @@ fn test_split_with_rounding() {
         &17u32,
         &17u32,
     );
-    assert!(result.is_ok(), "Failed to initialize split");
 
     // Calculate split for an amount that will have rounding
     let total = 1_000i128;
-    let split_result = remittance_client.calculate_split(&total);
-    assert!(split_result.is_ok(), "Failed to calculate split");
+    let amounts = remittance_client.calculate_split(&total);
 
-    let amounts = split_result.unwrap();
     let spending = amounts.get(0).unwrap();
     let savings = amounts.get(1).unwrap();
     let bills = amounts.get(2).unwrap();
@@ -200,8 +187,8 @@ fn test_multiple_entities_creation() {
     let user = Address::generate(&env);
 
     // Deploy contracts
-    let savings_contract_id = env.register_contract(None, SavingsGoals);
-    let savings_client = SavingsGoalsClient::new(&env, &savings_contract_id);
+    let savings_contract_id = env.register_contract(None, SavingsGoalContract);
+    let savings_client = SavingsGoalContractClient::new(&env, &savings_contract_id);
 
     let bills_contract_id = env.register_contract(None, BillPayments);
     let bills_client = BillPaymentsClient::new(&env, &bills_contract_id);
@@ -216,7 +203,7 @@ fn test_multiple_entities_creation() {
         &5_000i128,
         &(env.ledger().timestamp() + 180 * 86400),
     );
-    assert!(goal1.is_ok());
+    assert_eq!(goal1, 1u32);
 
     let goal2 = savings_client.create_goal(
         &user,
@@ -224,7 +211,7 @@ fn test_multiple_entities_creation() {
         &2_000i128,
         &(env.ledger().timestamp() + 90 * 86400),
     );
-    assert!(goal2.is_ok());
+    assert_eq!(goal2, 2u32);
 
     // Create multiple bills
     let bill1 = bills_client.create_bill(
@@ -235,7 +222,7 @@ fn test_multiple_entities_creation() {
         &true,
         &30u32,
     );
-    assert!(bill1.is_ok());
+    assert_eq!(bill1, 1u32);
 
     let bill2 = bills_client.create_bill(
         &user,
@@ -245,7 +232,7 @@ fn test_multiple_entities_creation() {
         &true,
         &30u32,
     );
-    assert!(bill2.is_ok());
+    assert_eq!(bill2, 2u32);
 
     // Create multiple insurance policies
     let policy1 = insurance_client.create_policy(
@@ -255,7 +242,7 @@ fn test_multiple_entities_creation() {
         &150i128,
         &100_000i128,
     );
-    assert!(policy1.is_ok());
+    assert_eq!(policy1, 1u32);
 
     let policy2 = insurance_client.create_policy(
         &user,
@@ -264,7 +251,7 @@ fn test_multiple_entities_creation() {
         &50i128,
         &10_000i128,
     );
-    assert!(policy2.is_ok());
+    assert_eq!(policy2, 2u32);
 
     println!("✅ Multiple entities creation test passed!");
     println!("   Created 2 savings goals");
