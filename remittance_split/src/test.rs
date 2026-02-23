@@ -185,8 +185,15 @@ fn test_calculate_split_rounding_rigorous() {
     client.initialize_split(&owner, &0, &33, &33, &33, &1);
     let amounts = client.calculate_split(&100);
     let sum: i128 = amounts.clone().into_iter().sum();
-    assert_eq!(sum, 100, "Sum must exactly equal total_amount for 33/33/33/1 split");
-    assert_eq!(amounts.get(3).unwrap(), 1, "Insurance should be the remainder (1)");
+    assert_eq!(
+        sum, 100,
+        "Sum must exactly equal total_amount for 33/33/33/1 split"
+    );
+    assert_eq!(
+        amounts.get(3).unwrap(),
+        1,
+        "Insurance should be the remainder (1)"
+    );
 
     // Case 2: 25/25/25/25 split, total 99
     // Each 25% of 99 is (99 * 25) / 100 = 24.
@@ -197,8 +204,15 @@ fn test_calculate_split_rounding_rigorous() {
     assert!(result.is_ok(), "update_split Case 2 failed: {:?}", result);
     let amounts = client.calculate_split(&99);
     let sum: i128 = amounts.clone().into_iter().sum();
-    assert_eq!(sum, 99, "Sum must exactly equal total_amount (99) for 25/25/25/25 split");
-    assert_eq!(amounts.get(3).unwrap(), 27, "Insurance should absorb the rounding remainder (27)");
+    assert_eq!(
+        sum, 99,
+        "Sum must exactly equal total_amount (99) for 25/25/25/25 split"
+    );
+    assert_eq!(
+        amounts.get(3).unwrap(),
+        27,
+        "Insurance should absorb the rounding remainder (27)"
+    );
 
     // Case 3: 100/0/0/0 split, total 1000
     // Spending: 1000, others 0. Remainder: 1000 - 1000 - 0 - 0 = 0.
@@ -224,8 +238,11 @@ fn test_calculate_split_rounding_rigorous() {
     assert!(result.is_ok(), "update_split Case 4 failed: {:?}", result);
     let amounts = client.calculate_split(&1000001);
     let sum: i128 = amounts.into_iter().sum();
-    assert_eq!(sum, 1000001, "Sum must exactly match even with large prime-like amounts");
-    
+    assert_eq!(
+        sum, 1000001,
+        "Sum must exactly match even with large prime-like amounts"
+    );
+
     // Documenting that the contract assigns the remainder to insurance to avoid rounding drift.
 }
 
