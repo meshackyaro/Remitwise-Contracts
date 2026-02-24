@@ -1359,4 +1359,455 @@ mod test {
         assert_eq!(page2.count, 2);
         assert_eq!(page2.next_cursor, 0);
     }
+
+    // -----------------------------------------------------------------------
+    // RECURRING BILLS DATE MATH TESTS
+    // -----------------------------------------------------------------------
+    // These tests verify the core date math for recurring bills:
+    // next_due_date = due_date + (frequency_days * 86400)
+    // Ensures paid_at does not affect next bill's due_date calculation.
+
+    #[test]
+    fn test_recurring_date_math_frequency_1_day() {
+        // Test: frequency_days = 1 → next due date is +1 day (86400 seconds)
+        let env = make_env();
+        env.mock_all_auths();
+        let cid = env.register_contract(None, BillPayments);
+        let client = BillPaymentsClient::new(&env, &cid);
+        let owner = Address::generate(&env);
+
+        let base_due_date = 1_000_000u64;
+        let bill_id = client.create_bill(
+            &owner,
+            &String::from_str(&env, "Daily Bill"),
+            &100,
+            &base_due_date,
+            &true, // recurring
+            &1,    // frequency_days = 1
+        );
+
+        // Pay the bill
+        client.pay_bill(&owner, &bill_id);
+
+        // Verify next bill's due_date = base_due_date + (1 * 86400)
+        let next_bill = client.get_bill(&2).unwrap();
+        assert!(!next_bill.paid, "Next bill should be unpaid");
+        assert_eq!(
+            next_bill.due_date,
+            base_due_date + 86400,
+            "Next due date should be exactly 1 day later"
+        );
+        assert_eq!(next_bill.frequency_days, 1, "Frequency should be preserved");
+    }
+
+    #[test]
+    fn test_recurring_date_math_frequency_30_days() {
+        // Test: frequency_days = 30 → next due date is +30 days (2,592,000 seconds)
+        let env = make_env();
+        env.mock_all_auths();
+        let cid = env.register_contract(None, BillPayments);
+        let client = BillPaymentsClient::new(&env, &cid);
+        let owner = Address::generate(&env);
+
+        let base_due_date = 1_000_000u64;
+        let bill_id = client.create_bill(
+            &owner,
+            &String::from_str(&env, "Monthly Bill"),
+            &500,
+            &base_due_date,
+            &true, // recurring
+            &30,   // frequency_days = 30
+        );
+
+        // Pay the bill
+        client.pay_bill(&owner, &bill_id);
+
+        // Verify next bill's due_date = base_due_date + (30 * 86400)
+        let next_bill = client.get_bill(&2).unwrap();
+        assert!(!next_bill.paid, "Next bill should be unpaid");
+        let expected_due_date = base_due_date + (30u64 * 86400);
+        assert_eq!(
+            next_bill.due_date, expected_due_date,
+            "Next due date should be exactly 30 days later"
+        );
+        assert_eq!(
+            next_bill.frequency_days, 30,
+            "Frequency should be preserved"
+        );
+    }
+
+    #[test]
+    fn test_recurring_date_math_frequency_365_days() {
+        // Test: frequency_days = 365 → next due date is +365 days (31,536,000 seconds)
+        let env = make_env();
+        env.mock_all_auths();
+        let cid = env.register_contract(None, BillPayments);
+        let client = BillPaymentsClient::new(&env, &cid);
+        let owner = Address::generate(&env);
+
+        let base_due_date = 1_000_000u64;
+        let bill_id = client.create_bill(
+            &owner,
+            &String::from_str(&env, "Annual Bill"),
+            &1200,
+            &base_due_date,
+            &true, // recurring
+            &365,  // frequency_days = 365
+        );
+
+        // Pay the bill
+        client.pay_bill(&owner, &bill_id);
+
+        // Verify next bill's due_date = base_due_date + (365 * 86400)
+        let next_bill = client.get_bill(&2).unwrap();
+        assert!(!next_bill.paid, "Next bill should be unpaid");
+        let expected_due_date = base_due_date + (365u64 * 86400);
+        assert_eq!(
+            next_bill.due_date, expected_due_date,
+            "Next due date should be exactly 365 days later"
+        );
+        assert_eq!(
+            next_bill.frequency_days, 365,
+            "Frequency should be preserved"
+        );
+    }
+
+    #[test]
+    fn test_recurring_date_math_paid_at_does_not_affect_next_due() {
+        // Test: paid_at timestamp does NOT affect next bill's due_date calculation
+        // Bill 1: due_date=1000000, paid_at=1000500 (paid 500 seconds late)
+        // Bill 2: due_date should be 1000000 + (30*86400), NOT 1000500 + (30*86400)
+        let env = make_env();
+        env.ledger().set_timestamp(1_000_500); // Set current time to 500 seconds after due date
+        env.mock_all_auths();
+        let cid = env.register_contract(None, BillPayments);
+        let client = BillPaymentsClient::new(&env, &cid);
+        let owner = Address::generate(&env);
+
+        let base_due_date = 1_000_000u64;
+        let bill_id = client.create_bill(
+            &owner,
+            &String::from_str(&env, "Late Payment Test"),
+            &300,
+            &base_due_date,
+            &true, // recurring
+            &30,   // frequency_days = 30
+        );
+
+        // Pay the bill (at time 1_000_500, which is 500 seconds after due_date)
+        client.pay_bill(&owner, &bill_id);
+
+        // Verify original bill has paid_at set
+        let paid_bill = client.get_bill(&bill_id).unwrap();
+        assert!(paid_bill.paid, "Bill should be marked as paid");
+        assert_eq!(
+            paid_bill.paid_at,
+            Some(1_000_500),
+            "paid_at should be set to current time"
+        );
+
+        // Verify next bill's due_date is based on original due_date, NOT paid_at
+        let next_bill = client.get_bill(&2).unwrap();
+        let expected_due_date = base_due_date + (30u64 * 86400);
+        assert_eq!(
+            next_bill.due_date, expected_due_date,
+            "Next due date should be based on original due_date, not paid_at"
+        );
+        assert!(!next_bill.paid, "Next bill should be unpaid");
+    }
+
+    #[test]
+    fn test_recurring_date_math_multiple_pay_cycles_2nd_bill() {
+        // Test: Multiple pay cycles - verify 2nd bill's due date advances correctly
+        // Bill 1: due_date=1000000, frequency=30
+        // Bill 2: due_date=1000000 + (30*86400)
+        let env = make_env();
+        env.mock_all_auths();
+        let cid = env.register_contract(None, BillPayments);
+        let client = BillPaymentsClient::new(&env, &cid);
+        let owner = Address::generate(&env);
+
+        let base_due_date = 1_000_000u64;
+        let bill_id = client.create_bill(
+            &owner,
+            &String::from_str(&env, "Multi-Cycle Bill"),
+            &250,
+            &base_due_date,
+            &true, // recurring
+            &30,   // frequency_days = 30
+        );
+
+        // Pay first bill
+        client.pay_bill(&owner, &bill_id);
+
+        // Verify second bill
+        let bill2 = client.get_bill(&2).unwrap();
+        let expected_bill2_due = base_due_date + (30u64 * 86400);
+        assert_eq!(bill2.due_date, expected_bill2_due);
+        assert!(!bill2.paid);
+
+        // Pay second bill
+        client.pay_bill(&owner, &2);
+
+        // Verify second bill is now paid
+        let bill2_paid = client.get_bill(&2).unwrap();
+        assert!(bill2_paid.paid);
+
+        // Verify third bill was created with correct due_date
+        let bill3 = client.get_bill(&3).unwrap();
+        let expected_bill3_due = expected_bill2_due + (30u64 * 86400);
+        assert_eq!(
+            bill3.due_date, expected_bill3_due,
+            "Bill 3 due_date should be Bill 2 due_date + (30*86400)"
+        );
+        assert!(!bill3.paid);
+    }
+
+    #[test]
+    fn test_recurring_date_math_multiple_pay_cycles_3rd_bill() {
+        // Test: Multiple pay cycles - verify 3rd bill's due date advances correctly
+        // Bill 1: due_date=1000000, frequency=30
+        // Bill 2: due_date=1000000 + (30*86400)
+        // Bill 3: due_date=1000000 + (60*86400)
+        let env = make_env();
+        env.mock_all_auths();
+        let cid = env.register_contract(None, BillPayments);
+        let client = BillPaymentsClient::new(&env, &cid);
+        let owner = Address::generate(&env);
+
+        let base_due_date = 1_000_000u64;
+        let bill_id = client.create_bill(
+            &owner,
+            &String::from_str(&env, "Three-Cycle Bill"),
+            &150,
+            &base_due_date,
+            &true, // recurring
+            &30,   // frequency_days = 30
+        );
+
+        // Pay first bill
+        client.pay_bill(&owner, &bill_id);
+
+        // Pay second bill
+        client.pay_bill(&owner, &2);
+
+        // Pay third bill
+        client.pay_bill(&owner, &3);
+
+        // Verify third bill is now paid
+        let bill3_paid = client.get_bill(&3).unwrap();
+        assert!(bill3_paid.paid);
+
+        // Verify fourth bill was created with correct due_date
+        let bill4 = client.get_bill(&4).unwrap();
+        let expected_bill4_due = base_due_date + (90u64 * 86400); // 3 * 30 days
+        assert_eq!(
+            bill4.due_date, expected_bill4_due,
+            "Bill 4 due_date should be base + (90*86400)"
+        );
+        assert!(!bill4.paid);
+    }
+
+    #[test]
+    fn test_recurring_date_math_early_payment_does_not_affect_schedule() {
+        // Test: Paying a bill EARLY should not affect the next bill's due_date
+        // Bill 1: due_date=1000000, paid at time=500000 (paid 500000 seconds early)
+        // Bill 2: due_date should still be 1000000 + (30*86400)
+        let env = make_env();
+        env.ledger().set_timestamp(500_000); // Set time BEFORE due date
+        env.mock_all_auths();
+        let cid = env.register_contract(None, BillPayments);
+        let client = BillPaymentsClient::new(&env, &cid);
+        let owner = Address::generate(&env);
+
+        let base_due_date = 1_000_000u64;
+        let bill_id = client.create_bill(
+            &owner,
+            &String::from_str(&env, "Early Payment Test"),
+            &200,
+            &base_due_date,
+            &true, // recurring
+            &30,   // frequency_days = 30
+        );
+
+        // Pay the bill early (at time 500_000)
+        client.pay_bill(&owner, &bill_id);
+
+        // Verify original bill has paid_at set to early time
+        let paid_bill = client.get_bill(&bill_id).unwrap();
+        assert!(paid_bill.paid);
+        assert_eq!(paid_bill.paid_at, Some(500_000));
+
+        // Verify next bill's due_date is still based on original due_date
+        let next_bill = client.get_bill(&2).unwrap();
+        let expected_due_date = base_due_date + (30u64 * 86400);
+        assert_eq!(
+            next_bill.due_date, expected_due_date,
+            "Next due date should not be affected by early payment"
+        );
+    }
+
+    #[test]
+    fn test_recurring_date_math_preserves_frequency_across_cycles() {
+        // Test: frequency_days is preserved across all recurring cycles
+        // Verify that Bill 1, 2, 3 all have the same frequency_days value
+        let env = make_env();
+        env.mock_all_auths();
+        let cid = env.register_contract(None, BillPayments);
+        let client = BillPaymentsClient::new(&env, &cid);
+        let owner = Address::generate(&env);
+
+        let frequency = 7u32; // Weekly
+        let bill_id = client.create_bill(
+            &owner,
+            &String::from_str(&env, "Weekly Bill"),
+            &50,
+            &1_000_000,
+            &true,
+            &frequency,
+        );
+
+        // Pay first bill
+        client.pay_bill(&owner, &bill_id);
+
+        // Pay second bill
+        client.pay_bill(&owner, &2);
+
+        // Verify all bills have the same frequency_days
+        let bill1 = client.get_bill(&1).unwrap();
+        let bill2 = client.get_bill(&2).unwrap();
+        let bill3 = client.get_bill(&3).unwrap();
+
+        assert_eq!(bill1.frequency_days, frequency);
+        assert_eq!(bill2.frequency_days, frequency);
+        assert_eq!(bill3.frequency_days, frequency);
+    }
+
+    #[test]
+    fn test_recurring_date_math_amount_preserved_across_cycles() {
+        // Test: Bill amount is preserved across all recurring cycles
+        let env = make_env();
+        env.mock_all_auths();
+        let cid = env.register_contract(None, BillPayments);
+        let client = BillPaymentsClient::new(&env, &cid);
+        let owner = Address::generate(&env);
+
+        let amount = 999i128;
+        let bill_id = client.create_bill(
+            &owner,
+            &String::from_str(&env, "Fixed Amount Bill"),
+            &amount,
+            &1_000_000,
+            &true,
+            &30,
+        );
+
+        // Pay first bill
+        client.pay_bill(&owner, &bill_id);
+
+        // Pay second bill
+        client.pay_bill(&owner, &2);
+
+        // Verify all bills have the same amount
+        let bill1 = client.get_bill(&1).unwrap();
+        let bill2 = client.get_bill(&2).unwrap();
+        let bill3 = client.get_bill(&3).unwrap();
+
+        assert_eq!(bill1.amount, amount);
+        assert_eq!(bill2.amount, amount);
+        assert_eq!(bill3.amount, amount);
+    }
+
+    #[test]
+    fn test_recurring_date_math_name_preserved_across_cycles() {
+        // Test: Bill name is preserved across all recurring cycles
+        let env = make_env();
+        env.mock_all_auths();
+        let cid = env.register_contract(None, BillPayments);
+        let client = BillPaymentsClient::new(&env, &cid);
+        let owner = Address::generate(&env);
+
+        let name = String::from_str(&env, "Rent Payment");
+        let bill_id = client.create_bill(&owner, &name, &1000, &1_000_000, &true, &30);
+
+        // Pay first bill
+        client.pay_bill(&owner, &bill_id);
+
+        // Pay second bill
+        client.pay_bill(&owner, &2);
+
+        // Verify all bills have the same name
+        let bill1 = client.get_bill(&1).unwrap();
+        let bill2 = client.get_bill(&2).unwrap();
+        let bill3 = client.get_bill(&3).unwrap();
+
+        assert_eq!(bill1.name, name);
+        assert_eq!(bill2.name, name);
+        assert_eq!(bill3.name, name);
+    }
+
+    #[test]
+    fn test_recurring_date_math_owner_preserved_across_cycles() {
+        // Test: Bill owner is preserved across all recurring cycles
+        let env = make_env();
+        env.mock_all_auths();
+        let cid = env.register_contract(None, BillPayments);
+        let client = BillPaymentsClient::new(&env, &cid);
+        let owner = Address::generate(&env);
+
+        let bill_id = client.create_bill(
+            &owner,
+            &String::from_str(&env, "Owner Test"),
+            &100,
+            &1_000_000,
+            &true,
+            &30,
+        );
+
+        // Pay first bill
+        client.pay_bill(&owner, &bill_id);
+
+        // Pay second bill
+        client.pay_bill(&owner, &2);
+
+        // Verify all bills have the same owner
+        let bill1 = client.get_bill(&1).unwrap();
+        let bill2 = client.get_bill(&2).unwrap();
+        let bill3 = client.get_bill(&3).unwrap();
+
+        assert_eq!(bill1.owner, owner);
+        assert_eq!(bill2.owner, owner);
+        assert_eq!(bill3.owner, owner);
+    }
+
+    #[test]
+    fn test_recurring_date_math_exact_calculation_verification() {
+        // Test: Verify exact date math calculation with known values
+        // due_date = 1_000_000
+        // frequency_days = 14
+        // Expected: 1_000_000 + (14 * 86400) = 1_000_000 + 1_209_600 = 2_209_600
+        let env = make_env();
+        env.mock_all_auths();
+        let cid = env.register_contract(None, BillPayments);
+        let client = BillPaymentsClient::new(&env, &cid);
+        let owner = Address::generate(&env);
+
+        let base_due = 1_000_000u64;
+        let freq = 14u32;
+        let bill_id = client.create_bill(
+            &owner,
+            &String::from_str(&env, "Math Verification"),
+            &100,
+            &base_due,
+            &true,
+            &freq,
+        );
+
+        client.pay_bill(&owner, &bill_id);
+
+        let next_bill = client.get_bill(&2).unwrap();
+        let expected = 1_000_000u64 + (14u64 * 86400);
+        assert_eq!(next_bill.due_date, expected);
+        assert_eq!(next_bill.due_date, 2_209_600);
+    }
 }
