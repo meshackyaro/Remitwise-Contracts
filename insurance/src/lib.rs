@@ -980,7 +980,7 @@ mod test {
     }
 
     #[test]
-    fn test_create_policy_emits_event() {
+    fn test_get_active_policies_paginated() {
         let env = Env::default();
         env.mock_all_auths();
         let id = env.register_contract(None, Insurance);

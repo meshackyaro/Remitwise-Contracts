@@ -204,6 +204,32 @@ To view results:
 3. Download the `gas-benchmarks` artifact
 4. View `gas_results.json` for metrics
 
+## Seed data for local development
+
+After deploying contracts to a local or test network, you can seed them with realistic example data (goals, bills, policies, remittance split, and optionally family members) using deterministic values for stable IDs.
+
+1. **Deploy** the contracts (see [Deployment](DEPLOYMENT.md)) and note the contract IDs.
+2. **Create a signer identity** (if needed) and fund it on the target network:
+   ```bash
+   soroban keys generate deployer
+   # Fund the deployer address (e.g. via friendbot on testnet)
+   ```
+3. **Run the seed script** with your contract IDs and network:
+   ```bash
+   export REMITTANCE_SPLIT_ID=<id>
+   export SAVINGS_GOALS_ID=<id>
+   export BILL_PAYMENTS_ID=<id>
+   export INSURANCE_ID=<id>
+   export NETWORK=testnet
+   export SOURCE=deployer
+   ./scripts/seed_local.sh
+   ```
+   Or pass IDs as arguments: `./scripts/seed_local.sh $REMITTANCE_SPLIT_ID $SAVINGS_GOALS_ID $BILL_PAYMENTS_ID $INSURANCE_ID`
+
+   Optional: set `SEED_FAMILY=1` and `FAMILY_WALLET_ID=<id>` to initialize the family wallet with the owner. Add members later via `add_member` or extend the script.
+
+The script requires the Soroban CLI (or Stellar CLI). It creates three savings goals, three bills, two insurance policies, and one remittance split (50/30/15/5). Re-running on the same deployment will create additional entities; for a clean slate, deploy fresh contracts.
+
 ## Deployment
 
 See the [Deployment Guide](DEPLOYMENT.md) for comprehensive deployment instructions.

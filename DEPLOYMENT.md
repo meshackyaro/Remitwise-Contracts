@@ -346,3 +346,7 @@ Approximate deployment costs (Testnet):
 - Track function call volumes
 - Set up alerts for failures
 - Regular backup of contract states
+
+### Off-chain reconciliation
+
+To keep off-chain systems (databases, reporting, Anchor webhooks) aligned with on-chain state, follow the [Off-Chain Reconciliation Process](docs/off-chain-reconciliation.md). It covers data sources (events, webhooks, off-chain DB), a reconciliation checklist, and example flows for event-driven ingestion and periodic reconciliation.
