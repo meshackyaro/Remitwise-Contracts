@@ -20,16 +20,16 @@
                   "u64": 0
                 },
                 {
-                  "u32": 17
+                  "u32": 50
                 },
                 {
-                  "u32": 19
+                  "u32": 30
                 },
                 {
-                  "u32": 23
+                  "u32": 15
                 },
                 {
-                  "u32": 41
+                  "u32": 5
                 }
               ]
             }
@@ -37,9 +37,7 @@
           "sub_invocations": []
         }
       ]
-    ],
-    [],
-    []
+    ]
   ],
   "ledger": {
     "protocol_version": 21,
@@ -130,7 +128,7 @@
                                 "symbol": "bills_percent"
                               },
                               "val": {
-                                "u32": 23
+                                "u32": 15
                               }
                             },
                             {
@@ -146,7 +144,7 @@
                                 "symbol": "insurance_percent"
                               },
                               "val": {
-                                "u32": 41
+                                "u32": 5
                               }
                             },
                             {
@@ -162,7 +160,7 @@
                                 "symbol": "savings_percent"
                               },
                               "val": {
-                                "u32": 19
+                                "u32": 30
                               }
                             },
                             {
@@ -170,7 +168,7 @@
                                 "symbol": "spending_percent"
                               },
                               "val": {
-                                "u32": 17
+                                "u32": 50
                               }
                             },
                             {
@@ -208,16 +206,16 @@
                         "val": {
                           "vec": [
                             {
-                              "u32": 17
+                              "u32": 50
                             },
                             {
-                              "u32": 19
+                              "u32": 30
                             },
                             {
-                              "u32": 23
+                              "u32": 15
                             },
                             {
-                              "u32": 41
+                              "u32": 5
                             }
                           ]
                         }
@@ -316,16 +314,16 @@
                   "u64": 0
                 },
                 {
-                  "u32": 17
+                  "u32": 50
                 },
                 {
-                  "u32": 19
+                  "u32": 30
                 },
                 {
-                  "u32": 23
+                  "u32": 15
                 },
                 {
-                  "u32": 41
+                  "u32": 5
                 }
               ]
             }
@@ -378,388 +376,6 @@
             ],
             "data": {
               "bool": true
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": null,
-        "type_": "diagnostic",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "fn_call"
-              },
-              {
-                "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
-              },
-              {
-                "symbol": "calculate_split"
-              }
-            ],
-            "data": {
-              "i128": {
-                "hi": 0,
-                "lo": 1000
-              }
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
-        "type_": "contract",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "calc"
-              }
-            ],
-            "data": {
-              "map": [
-                {
-                  "key": {
-                    "symbol": "bills_amount"
-                  },
-                  "val": {
-                    "i128": {
-                      "hi": 0,
-                      "lo": 230
-                    }
-                  }
-                },
-                {
-                  "key": {
-                    "symbol": "insurance_amount"
-                  },
-                  "val": {
-                    "i128": {
-                      "hi": 0,
-                      "lo": 410
-                    }
-                  }
-                },
-                {
-                  "key": {
-                    "symbol": "savings_amount"
-                  },
-                  "val": {
-                    "i128": {
-                      "hi": 0,
-                      "lo": 190
-                    }
-                  }
-                },
-                {
-                  "key": {
-                    "symbol": "spending_amount"
-                  },
-                  "val": {
-                    "i128": {
-                      "hi": 0,
-                      "lo": 170
-                    }
-                  }
-                },
-                {
-                  "key": {
-                    "symbol": "timestamp"
-                  },
-                  "val": {
-                    "u64": 0
-                  }
-                },
-                {
-                  "key": {
-                    "symbol": "total_amount"
-                  },
-                  "val": {
-                    "i128": {
-                      "hi": 0,
-                      "lo": 1000
-                    }
-                  }
-                }
-              ]
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
-        "type_": "contract",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "split"
-              },
-              {
-                "vec": [
-                  {
-                    "symbol": "Calculated"
-                  }
-                ]
-              }
-            ],
-            "data": {
-              "i128": {
-                "hi": 0,
-                "lo": 1000
-              }
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
-        "type_": "diagnostic",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "fn_return"
-              },
-              {
-                "symbol": "calculate_split"
-              }
-            ],
-            "data": {
-              "vec": [
-                {
-                  "i128": {
-                    "hi": 0,
-                    "lo": 170
-                  }
-                },
-                {
-                  "i128": {
-                    "hi": 0,
-                    "lo": 190
-                  }
-                },
-                {
-                  "i128": {
-                    "hi": 0,
-                    "lo": 230
-                  }
-                },
-                {
-                  "i128": {
-                    "hi": 0,
-                    "lo": 410
-                  }
-                }
-              ]
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": null,
-        "type_": "diagnostic",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "fn_call"
-              },
-              {
-                "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
-              },
-              {
-                "symbol": "calculate_split"
-              }
-            ],
-            "data": {
-              "i128": {
-                "hi": 0,
-                "lo": 3
-              }
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
-        "type_": "contract",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "calc"
-              }
-            ],
-            "data": {
-              "map": [
-                {
-                  "key": {
-                    "symbol": "bills_amount"
-                  },
-                  "val": {
-                    "i128": {
-                      "hi": 0,
-                      "lo": 0
-                    }
-                  }
-                },
-                {
-                  "key": {
-                    "symbol": "insurance_amount"
-                  },
-                  "val": {
-                    "i128": {
-                      "hi": 0,
-                      "lo": 3
-                    }
-                  }
-                },
-                {
-                  "key": {
-                    "symbol": "savings_amount"
-                  },
-                  "val": {
-                    "i128": {
-                      "hi": 0,
-                      "lo": 0
-                    }
-                  }
-                },
-                {
-                  "key": {
-                    "symbol": "spending_amount"
-                  },
-                  "val": {
-                    "i128": {
-                      "hi": 0,
-                      "lo": 0
-                    }
-                  }
-                },
-                {
-                  "key": {
-                    "symbol": "timestamp"
-                  },
-                  "val": {
-                    "u64": 0
-                  }
-                },
-                {
-                  "key": {
-                    "symbol": "total_amount"
-                  },
-                  "val": {
-                    "i128": {
-                      "hi": 0,
-                      "lo": 3
-                    }
-                  }
-                }
-              ]
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
-        "type_": "contract",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "split"
-              },
-              {
-                "vec": [
-                  {
-                    "symbol": "Calculated"
-                  }
-                ]
-              }
-            ],
-            "data": {
-              "i128": {
-                "hi": 0,
-                "lo": 3
-              }
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
-        "type_": "diagnostic",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "fn_return"
-              },
-              {
-                "symbol": "calculate_split"
-              }
-            ],
-            "data": {
-              "vec": [
-                {
-                  "i128": {
-                    "hi": 0,
-                    "lo": 0
-                  }
-                },
-                {
-                  "i128": {
-                    "hi": 0,
-                    "lo": 0
-                  }
-                },
-                {
-                  "i128": {
-                    "hi": 0,
-                    "lo": 0
-                  }
-                },
-                {
-                  "i128": {
-                    "hi": 0,
-                    "lo": 3
-                  }
-                }
-              ]
             }
           }
         }
