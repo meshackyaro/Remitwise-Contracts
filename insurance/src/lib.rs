@@ -1109,14 +1109,12 @@ mod test {
         // No policies created — policy ID 999 does not exist
         let result = client.try_pay_premium(&owner, &999u32);
 
-        assert!(
-            result.is_err(),
-            "pay_premium must fail when policy does not exist"
-        );
-    }
+        // Contract panics when policy not found
+        assert!(result.is_err());
+    }    }
 
     #[test]
-    fn test_get_active_policies_paginated() {
+    fn test_get_active_policies_pagination() {
         let env = Env::default();
         env.mock_all_auths();
         let id = env.register_contract(None, Insurance);
