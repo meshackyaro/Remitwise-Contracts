@@ -17,6 +17,193 @@ This workspace contains the core smart contracts that power RemitWise's post-rem
 - Stellar CLI (soroban-cli)
 - Cargo
 
+## Compatibility
+
+### Tested Versions
+
+These contracts have been developed and tested with the following versions:
+
+- **Soroban SDK**: `21.0.0`
+- **Soroban CLI**: `21.0.0`
+- **Rust Toolchain**: `stable` (with `wasm32-unknown-unknown` and `wasm32v1-none` targets)
+- **Protocol Version**: Compatible with Stellar Protocol 20+ (Soroban Phase 1)
+- **Network**: Testnet and Mainnet ready
+
+### Version Compatibility Matrix
+
+| Component | Version | Status | Notes |
+|-----------|---------|--------|-------|
+| soroban-sdk | 21.0.0 | ✅ Tested | Current stable release |
+| soroban-cli | 21.0.0 | ✅ Tested | Matches SDK version |
+| Protocol 20 | - | ✅ Compatible | Soroban Phase 1 features |
+| Protocol 21+ | - | ⚠️ Untested | Should be compatible, validation recommended |
+
+### Upgrading to New Soroban Versions
+
+When a new Soroban SDK or protocol version is released, follow these steps to validate and upgrade:
+
+#### 1. Review Release Notes
+
+Check the [Soroban SDK releases](https://github.com/stellar/rs-soroban-sdk/releases) for:
+- Breaking changes in contract APIs
+- New features or optimizations
+- Deprecated functions
+- Protocol version requirements
+
+#### 2. Update Dependencies
+
+Update the SDK version in all contract `Cargo.toml` files:
+
+```toml
+[dependencies]
+soroban-sdk = "X.Y.Z"
+
+[dev-dependencies]
+soroban-sdk = { version = "X.Y.Z", features = ["testutils"] }
+```
+
+Contracts to update:
+- `remittance_split/Cargo.toml`
+- `savings_goals/Cargo.toml`
+- `bill_payments/Cargo.toml`
+- `insurance/Cargo.toml`
+- `family_wallet/Cargo.toml`
+- `data_migration/Cargo.toml`
+- `reporting/Cargo.toml`
+- `orchestrator/Cargo.toml`
+
+#### 3. Update Soroban CLI
+
+```bash
+cargo install --locked --version X.Y.Z soroban-cli
+```
+
+Verify installation:
+```bash
+soroban version
+```
+
+#### 4. Run Full Test Suite
+
+```bash
+# Clean build artifacts
+cargo clean
+
+# Run all tests
+cargo test
+
+# Run gas benchmarks to check for performance regressions
+./scripts/run_gas_benchmarks.sh
+```
+
+#### 5. Validate on Testnet
+
+Deploy contracts to testnet and run integration tests:
+
+```bash
+# Build optimized contracts
+cargo build --release --target wasm32-unknown-unknown
+
+# Deploy to testnet
+soroban contract deploy \
+  --wasm target/wasm32-unknown-unknown/release/<contract_name>.wasm \
+  --source <your-key> \
+  --network testnet
+
+# Test contract interactions
+soroban contract invoke \
+  --id <contract-id> \
+  --source <your-key> \
+  --network testnet \
+  -- <function-name> <args>
+```
+
+#### 6. Check for Breaking Changes
+
+Common breaking changes to watch for:
+
+- **Storage API changes**: TTL management, archival patterns
+- **Event emission**: Topic structure or data format changes
+- **Authorization**: Auth context or signature verification changes
+- **Numeric types**: Changes to `i128`, `u128`, or fixed-point math
+- **Contract lifecycle**: Initialization or upgrade patterns
+
+#### 7. Update Documentation
+
+After successful validation:
+- Update this compatibility section with new versions
+- Document any migration steps in `DEPLOYMENT.md`
+- Update code examples if APIs changed
+- Regenerate contract bindings if needed
+
+### Known Breaking Changes
+
+#### SDK 21.0.0 (Current)
+
+No breaking changes from previous stable releases affecting these contracts.
+
+#### Future Considerations
+
+- **Protocol 21+**: May introduce new storage pricing or TTL requirements
+- **SDK 22.0.0+**: Monitor for changes to contract storage patterns, event APIs, or authorization flows
+
+### Network Protocol Versions
+
+The contracts are designed to be compatible with:
+
+- **Testnet**: Currently running Protocol 20+
+- **Mainnet**: Currently running Protocol 20+
+
+Check current network protocol versions:
+```bash
+# Testnet
+soroban network container logs stellar 2>&1 | grep "protocol version"
+
+# Or via RPC
+curl -X POST https://soroban-testnet.stellar.org \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"getNetwork","params":[]}'
+```
+
+### Troubleshooting Version Issues
+
+**Build Errors After Upgrade:**
+```bash
+# Clear all caches
+cargo clean
+rm -rf target/
+rm Cargo.lock
+
+# Rebuild
+cargo build --release --target wasm32-unknown-unknown
+```
+
+**Test Failures:**
+- Check for deprecated test utilities in SDK release notes
+- Verify mock contract behavior hasn't changed
+- Review event emission format changes
+
+**Deployment Issues:**
+- Ensure CLI version matches SDK version
+- Verify network is running compatible protocol version
+- Check for new deployment flags or requirements
+
+### Reporting Compatibility Issues
+
+If you encounter issues with a specific Soroban version:
+
+1. Check existing [GitHub Issues](https://github.com/stellar/rs-soroban-sdk/issues)
+2. Verify your environment matches tested versions
+3. Create a minimal reproduction case
+4. Report with version details and error logs
+
+### Additional Resources
+
+- **[UPGRADE_GUIDE.md](UPGRADE_GUIDE.md)** - Comprehensive upgrade procedures and version-specific migration guides
+- **[VERSION_COMPATIBILITY.md](VERSION_COMPATIBILITY.md)** - Detailed compatibility matrix and testing status
+- **[COMPATIBILITY_QUICK_REFERENCE.md](COMPATIBILITY_QUICK_REFERENCE.md)** - Quick reference for common compatibility tasks
+- **[.github/SOROBAN_VERSION_CHECKLIST.md](.github/SOROBAN_VERSION_CHECKLIST.md)** - Validation checklist for new versions
+
 ## Installation
 
 ```bash
@@ -216,6 +403,15 @@ soroban contract deploy \
   --source <your-key> \
   --network testnet
 ```
+
+## Documentation
+
+- [README.md](README.md) - Main documentation and getting started
+- [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture and design
+- [DEPLOYMENT.md](DEPLOYMENT.md) - Deployment guide for testnet and mainnet
+- [UPGRADE_GUIDE.md](UPGRADE_GUIDE.md) - Detailed Soroban version upgrade procedures
+- [VERSION_COMPATIBILITY.md](VERSION_COMPATIBILITY.md) - Version compatibility matrix and testing status
+- [docs/adr-admin-role.md](docs/adr-admin-role.md) - Architecture decision records
 
 ## Development
 
