@@ -85,6 +85,7 @@ Instance Storage:
 - Payment tracking and status
 - Recurring bill automation
 - Overdue bill identification
+- Optional external reference IDs for off-chain linkage
 
 **Storage Structure:**
 
@@ -110,6 +111,7 @@ Instance Storage:
 - Monthly premium scheduling
 - Payment tracking
 - Policy deactivation
+- Optional external reference IDs for off-chain linkage
 
 **Storage Structure:**
 
@@ -162,7 +164,7 @@ fn process_remittance(env: Env, user: Address, amount: i128) {
     savings_goals::add_to_goal(env, user, primary_goal, allocations[1]);
 
     // 3. Create bill payments
-    bill_payments::create_bill(env, user, "Monthly Bills", allocations[2], due_date, false, 0);
+    bill_payments::create_bill(env, user, "Monthly Bills", allocations[2], due_date, false, 0, None);
 
     // 4. Pay insurance premiums
     insurance::pay_premium(env, user, active_policy);
@@ -211,11 +213,13 @@ fn get_financial_overview(env: Env, user: Address) -> FinancialOverview {
 Bill Payments Events:
 ├── BillEvent::Created
 ├── BillEvent::Paid
+├── BillEvent::ExternalRefUpdated
 
 Insurance Events:
 ├── InsuranceEvent::PolicyCreated
 ├── InsuranceEvent::PremiumPaid
 ├── InsuranceEvent::PolicyDeactivated
+├── InsuranceEvent::ExternalRefUpdated
 
 Remittance Split Events:
 ├── SplitEvent::Initialized
