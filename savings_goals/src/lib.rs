@@ -1276,7 +1276,10 @@ impl SavingsGoalContract {
 #[cfg(test)]
 mod test {
     use super::*;
-    use soroban_sdk::{testutils::{Address as _, Ledger}, Env, String};
+    use soroban_sdk::{
+        testutils::{Address as _, Ledger},
+        Env, String,
+    };
 
     fn make_env() -> Env {
         Env::default()
@@ -1514,7 +1517,11 @@ mod test {
         // One second before due: must NOT execute
         env.ledger().set_timestamp(next_due - 1);
         let executed = client.execute_due_savings_schedules();
-        assert_eq!(executed.len(), 0, "Must not execute one second before next_due");
+        assert_eq!(
+            executed.len(),
+            0,
+            "Must not execute one second before next_due"
+        );
 
         let goal = client.get_goal(&goal_id).unwrap();
         assert_eq!(goal.current_amount, 0);
@@ -1553,12 +1560,16 @@ mod test {
         env.ledger().set_timestamp(next_due + 100);
         let executed_again = client.execute_due_savings_schedules();
         assert_eq!(
-            executed_again.len(), 0,
+            executed_again.len(),
+            0,
             "Must not re-execute before the new next_due"
         );
 
         let goal = client.get_goal(&goal_id).unwrap();
-        assert_eq!(goal.current_amount, 1000, "Funds must be added exactly once");
+        assert_eq!(
+            goal.current_amount, 1000,
+            "Funds must be added exactly once"
+        );
     }
 
     /// A large forward jump correctly marks missed intervals on a recurring schedule.
@@ -1583,7 +1594,10 @@ mod test {
         client.execute_due_savings_schedules();
 
         let schedule = client.get_savings_schedule(&schedule_id).unwrap();
-        assert_eq!(schedule.missed_count, 3, "Three intervals skipped; missed_count must be 3");
+        assert_eq!(
+            schedule.missed_count, 3,
+            "Three intervals skipped; missed_count must be 3"
+        );
         assert!(
             schedule.next_due > next_due + interval * 3,
             "next_due must advance past all skipped intervals"

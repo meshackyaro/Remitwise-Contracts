@@ -1842,7 +1842,10 @@ mod test {
         );
 
         let page = client.get_overdue_bills(&0, &100);
-        assert_eq!(page.count, 0, "Bill must not appear overdue when current_time == due_date");
+        assert_eq!(
+            page.count, 0,
+            "Bill must not appear overdue when current_time == due_date"
+        );
     }
 
     /// Bill becomes overdue exactly one second after due_date.
@@ -1873,7 +1876,10 @@ mod test {
         // One second past due_date
         env.ledger().set_timestamp(due_date + 1);
         let page = client.get_overdue_bills(&0, &100);
-        assert_eq!(page.count, 1, "Bill must appear overdue exactly one second past due_date");
+        assert_eq!(
+            page.count, 1,
+            "Bill must appear overdue exactly one second past due_date"
+        );
     }
 
     /// Mix of past-due, exactly-due, and future bills: only past-due one appears.
@@ -1889,14 +1895,38 @@ mod test {
         let owner = Address::generate(&env);
 
         // Past-due
-        client.create_bill(&owner, &String::from_str(&env, "Overdue"), &100, &(current_time - 1), &false, &0);
+        client.create_bill(
+            &owner,
+            &String::from_str(&env, "Overdue"),
+            &100,
+            &(current_time - 1),
+            &false,
+            &0,
+        );
         // Exactly due – NOT overdue
-        client.create_bill(&owner, &String::from_str(&env, "DueNow"), &200, &current_time, &false, &0);
+        client.create_bill(
+            &owner,
+            &String::from_str(&env, "DueNow"),
+            &200,
+            &current_time,
+            &false,
+            &0,
+        );
         // Future – NOT overdue
-        client.create_bill(&owner, &String::from_str(&env, "Future"), &300, &(current_time + 1), &false, &0);
+        client.create_bill(
+            &owner,
+            &String::from_str(&env, "Future"),
+            &300,
+            &(current_time + 1),
+            &false,
+            &0,
+        );
 
         let page = client.get_overdue_bills(&0, &100);
-        assert_eq!(page.count, 1, "Only the bill with due_date < current_time must appear overdue");
+        assert_eq!(
+            page.count, 1,
+            "Only the bill with due_date < current_time must appear overdue"
+        );
         assert_eq!(page.items.get(0).unwrap().amount, 100);
     }
 
@@ -1929,6 +1959,9 @@ mod test {
         // One full day later
         env.ledger().set_timestamp(due_date + day);
         let page = client.get_overdue_bills(&0, &100);
-        assert_eq!(page.count, 1, "Bill must be overdue one full day past due_date");
+        assert_eq!(
+            page.count, 1,
+            "Bill must be overdue one full day past due_date"
+        );
     }
 }

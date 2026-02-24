@@ -976,7 +976,10 @@ mod test {
         // No policies created — policy ID 999 does not exist
         let result = client.try_pay_premium(&owner, &999u32);
 
-        assert!(result.is_err(), "pay_premium must fail when policy does not exist");
+        assert!(
+            result.is_err(),
+            "pay_premium must fail when policy does not exist"
+        );
     }
 
     #[test]
@@ -1494,7 +1497,11 @@ mod test {
 
         set_time(&env, next_due - 1);
         let executed = client.execute_due_premium_schedules();
-        assert_eq!(executed.len(), 0, "Must not execute one second before next_due");
+        assert_eq!(
+            executed.len(),
+            0,
+            "Must not execute one second before next_due"
+        );
     }
 
     /// Premium schedule must execute exactly at next_due (inclusive boundary).
@@ -1598,6 +1605,10 @@ mod test {
         // Between old next_due and new next_due: no re-execution
         set_time(&env, next_due + 1000);
         let executed_again = client.execute_due_premium_schedules();
-        assert_eq!(executed_again.len(), 0, "Must not re-execute before the new next_due");
+        assert_eq!(
+            executed_again.len(),
+            0,
+            "Must not re-execute before the new next_due"
+        );
     }
 }
