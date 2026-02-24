@@ -117,6 +117,10 @@ soroban contract deploy \
   --network testnet
 ```
 
+## Operational Limits
+
+ID and record-count operating limits (including `u32` overflow analysis and monitoring alerts) are documented in the **Operational Limits and Monitoring** section of [ARCHITECTURE.md](ARCHITECTURE.md).
+
 ## Development
 
 This is a basic MVP implementation. Future enhancements:
