@@ -149,6 +149,16 @@ cd remittance_split
 cargo test
 ```
 
+### Cross-Contract Invariant Tests
+
+Verify that allocations across contracts are consistent with remittance splits:
+
+```bash
+python3 scripts/verify_cross_contract_invariants.py
+```
+
+See [scripts/README_INVARIANT_TESTS.md](scripts/README_INVARIANT_TESTS.md) for details.
+
 ### USDC remittance split checks (local & CI)
 
 - `cargo test -p remittance_split` exercises the USDC distribution logic with a mocked Stellar Asset Contract (`env.register_stellar_asset_contract_v2`) and built-in auth mocking.
