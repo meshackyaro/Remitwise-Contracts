@@ -737,7 +737,7 @@ impl Insurance {
         };
         env.events().publish((POLICY_DEACTIVATED,), event);
         env.events().publish(
-            (symbol_short!("insuranc"), InsuranceEvent::PolicyDeactivated),
+            (symbol_short!("insure"), InsuranceEvent::PolicyDeactivated),
             (policy_id, caller),
         );
 
