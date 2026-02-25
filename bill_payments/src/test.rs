@@ -335,8 +335,23 @@ mod testsuit {
         );
         env.mock_all_auths();
         client.cancel_bill(&owner, &bill_id);
-        let bill = client.get_bill(&bill_id);
-        assert!(bill.is_none());
+        
+        // Verify cancelled bill is completely removed from storage
+        assert!(client.get_bill(&bill_id).is_none(), "cancelled bill should return None");
+        
+        // Create another bill and verify its ID is distinct and cancelled bill still returns None
+        env.mock_all_auths();
+        let new_bill_id = client.create_bill(
+            &owner,
+            &String::from_str(&env, "New Bill"),
+            &200,
+            &2000000,
+            &false,
+            &0,
+        );
+        assert_ne!(bill_id, new_bill_id, "new bill should have different ID");
+        assert!(client.get_bill(&new_bill_id).is_some(), "new bill should exist");
+        assert!(client.get_bill(&bill_id).is_none(), "cancelled bill should still return None");
     }
 
     #[test]
@@ -356,8 +371,9 @@ mod testsuit {
         );
         env.mock_all_auths();
         client.cancel_bill(&owner, &bill_id);
-        let bill = client.get_bill(&bill_id);
-        assert!(bill.is_none());
+        
+        // Verify owner can successfully cancel their own bill and it's removed
+        assert!(client.get_bill(&bill_id).is_none(), "bill should be removed after owner cancellation");
     }
 
     #[test]
