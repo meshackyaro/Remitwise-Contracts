@@ -88,6 +88,60 @@ pub struct SavingsSchedule {
 }
 
 #[contracttype]
+#[derive(Clone, Copy)]
+pub enum SavingsGoalsError {
+    InvalidAmount = 1,
+    GoalNotFound = 2,
+    Unauthorized = 3,
+    GoalLocked = 4,
+    InsufficientBalance = 5,
+    Overflow = 6,
+}
+
+impl From<SavingsGoalsError> for soroban_sdk::Error {
+    fn from(err: SavingsGoalsError) -> Self {
+        match err {
+            SavingsGoalsError::InvalidAmount => soroban_sdk::Error::from((
+                soroban_sdk::xdr::ScErrorType::Contract,
+                soroban_sdk::xdr::ScErrorCode::InvalidInput,
+            )),
+            SavingsGoalsError::GoalNotFound => soroban_sdk::Error::from((
+                soroban_sdk::xdr::ScErrorType::Contract,
+                soroban_sdk::xdr::ScErrorCode::MissingValue,
+            )),
+            SavingsGoalsError::Unauthorized => soroban_sdk::Error::from((
+                soroban_sdk::xdr::ScErrorType::Contract,
+                soroban_sdk::xdr::ScErrorCode::InvalidAction,
+            )),
+            SavingsGoalsError::GoalLocked => soroban_sdk::Error::from((
+                soroban_sdk::xdr::ScErrorType::Contract,
+                soroban_sdk::xdr::ScErrorCode::InvalidAction,
+            )),
+            SavingsGoalsError::InsufficientBalance => soroban_sdk::Error::from((
+                soroban_sdk::xdr::ScErrorType::Contract,
+                soroban_sdk::xdr::ScErrorCode::InvalidInput,
+            )),
+            SavingsGoalsError::Overflow => soroban_sdk::Error::from((
+                soroban_sdk::xdr::ScErrorType::Contract,
+                soroban_sdk::xdr::ScErrorCode::InvalidInput,
+            )),
+        }
+    }
+}
+
+impl From<&SavingsGoalsError> for soroban_sdk::Error {
+    fn from(err: &SavingsGoalsError) -> Self {
+        (*err).into()
+    }
+}
+
+impl From<soroban_sdk::Error> for SavingsGoalsError {
+    fn from(_err: soroban_sdk::Error) -> Self {
+        SavingsGoalsError::Unauthorized
+    }
+}
+
+#[contracttype]
 #[derive(Clone)]
 pub enum SavingsEvent {
     GoalCreated,
@@ -347,13 +401,13 @@ impl SavingsGoalContract {
         name: String,
         target_amount: i128,
         target_date: u64,
-    ) -> u32 {
+    ) -> Result<u32, SavingsGoalsError> {
         owner.require_auth();
         Self::require_not_paused(&env, pause_functions::CREATE_GOAL);
 
         if target_amount <= 0 {
             Self::append_audit(&env, symbol_short!("create"), &owner, false);
-            panic!("Target amount must be positive");
+            return Err(SavingsGoalsError::InvalidAmount);
         }
 
         Self::extend_instance_ttl(&env);
@@ -404,16 +458,39 @@ impl SavingsGoalContract {
             (next_id, owner),
         );
 
-        next_id
+        Ok(next_id)
     }
 
-    pub fn add_to_goal(env: Env, caller: Address, goal_id: u32, amount: i128) -> i128 {
+    /// Adds funds to an existing savings goal.
+    ///
+    /// # Arguments
+    /// * `caller` - Address of the goal owner (must authorize)
+    /// * `goal_id` - ID of the goal to add funds to
+    /// * `amount` - Amount to add in stroops (must be > 0)
+    ///
+    /// # Returns
+    /// `Ok(new_total)` - The new total amount in the goal
+    ///
+    /// # Errors
+    /// * `InvalidAmount` - If amount ≤ 0
+    /// * `GoalNotFound` - If goal_id does not exist
+    /// * `Unauthorized` - If caller is not the goal owner
+    /// * `Overflow` - If adding amount would overflow i128
+    ///
+    /// # Panics
+    /// * If `caller` does not authorize the transaction
+    pub fn add_to_goal(
+        env: Env,
+        caller: Address,
+        goal_id: u32,
+        amount: i128,
+    ) -> Result<i128, SavingsGoalsError> {
         caller.require_auth();
         Self::require_not_paused(&env, pause_functions::ADD_TO_GOAL);
 
         if amount <= 0 {
             Self::append_audit(&env, symbol_short!("add"), &caller, false);
-            panic!("Amount must be positive");
+            return Err(SavingsGoalsError::InvalidAmount);
         }
 
         Self::extend_instance_ttl(&env);
@@ -428,16 +505,19 @@ impl SavingsGoalContract {
             Some(g) => g,
             None => {
                 Self::append_audit(&env, symbol_short!("add"), &caller, false);
-                panic!("Goal not found");
+                return Err(SavingsGoalsError::GoalNotFound);
             }
         };
 
         if goal.owner != caller {
             Self::append_audit(&env, symbol_short!("add"), &caller, false);
-            panic!("Goal not found");
+            return Err(SavingsGoalsError::Unauthorized);
         }
 
-        goal.current_amount = goal.current_amount.checked_add(amount).expect("overflow");
+        goal.current_amount = goal
+            .current_amount
+            .checked_add(amount)
+            .ok_or(SavingsGoalsError::Overflow)?;
         let new_total = goal.current_amount;
         let was_completed = new_total >= goal.target_amount;
         let previously_completed = (new_total - amount) >= goal.target_amount;
@@ -478,7 +558,7 @@ impl SavingsGoalContract {
             );
         }
 
-        new_total
+        Ok(new_total)
     }
 
     pub fn batch_add_to_goals(
@@ -563,13 +643,38 @@ impl SavingsGoalContract {
         count
     }
 
-    pub fn withdraw_from_goal(env: Env, caller: Address, goal_id: u32, amount: i128) -> i128 {
+    /// Withdraws funds from an existing savings goal.
+    ///
+    /// # Arguments
+    /// * `caller` - Address of the goal owner (must authorize)
+    /// * `goal_id` - ID of the goal to withdraw from
+    /// * `amount` - Amount to withdraw in stroops (must be > 0)
+    ///
+    /// # Returns
+    /// `Ok(remaining_amount)` - The remaining amount in the goal after withdrawal
+    ///
+    /// # Errors
+    /// * `InvalidAmount` - If amount ≤ 0
+    /// * `GoalNotFound` - If goal_id does not exist
+    /// * `Unauthorized` - If caller is not the goal owner
+    /// * `GoalLocked` - If goal is locked or time-locked
+    /// * `InsufficientBalance` - If amount > current_amount
+    /// * `Overflow` - If subtraction would underflow i128
+    ///
+    /// # Panics
+    /// * If `caller` does not authorize the transaction
+    pub fn withdraw_from_goal(
+        env: Env,
+        caller: Address,
+        goal_id: u32,
+        amount: i128,
+    ) -> Result<i128, SavingsGoalsError> {
         caller.require_auth();
         Self::require_not_paused(&env, pause_functions::WITHDRAW);
 
         if amount <= 0 {
             Self::append_audit(&env, symbol_short!("withdraw"), &caller, false);
-            panic!("Amount must be positive");
+            return Err(SavingsGoalsError::InvalidAmount);
         }
 
         Self::extend_instance_ttl(&env);
@@ -584,34 +689,37 @@ impl SavingsGoalContract {
             Some(g) => g,
             None => {
                 Self::append_audit(&env, symbol_short!("withdraw"), &caller, false);
-                panic!("Goal not found");
+                return Err(SavingsGoalsError::GoalNotFound);
             }
         };
 
         if goal.owner != caller {
             Self::append_audit(&env, symbol_short!("withdraw"), &caller, false);
-            panic!("Only the goal owner can withdraw funds");
+            return Err(SavingsGoalsError::Unauthorized);
         }
 
         if goal.locked {
             Self::append_audit(&env, symbol_short!("withdraw"), &caller, false);
-            panic!("Cannot withdraw from a locked goal");
+            return Err(SavingsGoalsError::GoalLocked);
         }
 
         if let Some(unlock_date) = goal.unlock_date {
             let current_time = env.ledger().timestamp();
             if current_time < unlock_date {
                 Self::append_audit(&env, symbol_short!("withdraw"), &caller, false);
-                panic!("Goal is time-locked until unlock date");
+                return Err(SavingsGoalsError::GoalLocked);
             }
         }
 
         if amount > goal.current_amount {
             Self::append_audit(&env, symbol_short!("withdraw"), &caller, false);
-            panic!("Insufficient balance");
+            return Err(SavingsGoalsError::InsufficientBalance);
         }
 
-        goal.current_amount = goal.current_amount.checked_sub(amount).expect("underflow");
+        goal.current_amount = goal
+            .current_amount
+            .checked_sub(amount)
+            .ok_or(SavingsGoalsError::Overflow)?;
         let new_amount = goal.current_amount;
 
         goals.set(goal_id, goal);
@@ -625,7 +733,7 @@ impl SavingsGoalContract {
             (goal_id, caller, amount),
         );
 
-        new_amount
+        Ok(new_amount)
     }
 
     pub fn lock_goal(env: Env, caller: Address, goal_id: u32) -> bool {
