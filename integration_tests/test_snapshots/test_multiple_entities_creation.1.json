@@ -95,6 +95,9 @@
                 },
                 {
                   "u32": 30
+                },
+                {
+                  "string": "XLM"
                 }
               ]
             }
@@ -132,6 +135,9 @@
                 },
                 {
                   "u32": 30
+                },
+                {
+                  "string": "XLM"
                 }
               ]
             }
@@ -616,6 +622,30 @@
                         "val": {
                           "u32": 2
                         }
+                      },
+                      {
+                        "key": {
+                          "symbol": "OWN_GOAL"
+                        },
+                        "val": {
+                          "map": [
+                            {
+                              "key": {
+                                "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM"
+                              },
+                              "val": {
+                                "vec": [
+                                  {
+                                    "u32": 1
+                                  },
+                                  {
+                                    "u32": 2
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
                       }
                     ]
                   }
@@ -679,6 +709,14 @@
                                     },
                                     "val": {
                                       "u64": 0
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "symbol": "currency"
+                                    },
+                                    "val": {
+                                      "string": "XLM"
                                     }
                                   },
                                   {
@@ -779,6 +817,14 @@
                                   },
                                   {
                                     "key": {
+                                      "symbol": "currency"
+                                    },
+                                    "val": {
+                                      "string": "XLM"
+                                    }
+                                  },
+                                  {
+                                    "key": {
                                       "symbol": "due_date"
                                     },
                                     "val": {
@@ -857,6 +903,26 @@
                         },
                         "val": {
                           "u32": 2
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "UNPD_TOT"
+                        },
+                        "val": {
+                          "map": [
+                            {
+                              "key": {
+                                "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM"
+                              },
+                              "val": {
+                                "i128": {
+                                  "hi": 0,
+                                  "lo": 1600
+                                }
+                              }
+                            }
+                          ]
                         }
                       }
                     ]
@@ -1074,6 +1140,26 @@
                                     "val": "void"
                                   }
                                 ]
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "PRM_TOT"
+                        },
+                        "val": {
+                          "map": [
+                            {
+                              "key": {
+                                "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM"
+                              },
+                              "val": {
+                                "i128": {
+                                  "hi": 0,
+                                  "lo": 200
+                                }
                               }
                             }
                           ]
@@ -1479,6 +1565,9 @@
                 },
                 {
                   "u32": 30
+                },
+                {
+                  "string": "XLM"
                 }
               ]
             }
@@ -1595,6 +1684,9 @@
                 },
                 {
                   "u32": 30
+                },
+                {
+                  "string": "XLM"
                 }
               ]
             }
