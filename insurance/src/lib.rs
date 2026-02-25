@@ -1111,7 +1111,7 @@ mod test {
 
         // Contract panics when policy not found
         assert!(result.is_err());
-    }    }
+    }
 
     #[test]
     fn test_get_active_policies_pagination() {
